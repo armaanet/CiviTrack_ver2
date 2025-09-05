@@ -382,7 +382,7 @@
                 navigator.geolocation.getCurrentPosition(position => {
                     const { latitude, longitude } = position.coords;
                     locationData = { latitude, longitude };
-                    locationStatus.textContent = `✅ Location captured: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                    locationStatus.textContent = `✅ Location captured: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
                 }, error => {
                     locationStatus.textContent = "❌ Could not get location. Please enable permissions.";
                 }, { enableHighAccuracy: true });
