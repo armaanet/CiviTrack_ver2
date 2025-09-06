@@ -1,0 +1,281 @@
+import React, { useState } from "react";
+
+export default function App() {
+  const [activePage, setActivePage] = useState("dashboard");
+
+  const [issues, setIssues] = useState([
+    {
+      id: 1,
+      title: "Pothole in road",
+      region: "Delhi",
+      upvotes: 5,
+      days: 3,
+      status: "Pending",
+      employee: null,
+    },
+    {
+      id: 2,
+      title: "Broken streetlight",
+      region: "Mumbai",
+      upvotes: 3,
+      days: 5,
+      status: "In Progress",
+      employee: null,
+    },
+    {
+      id: 3,
+      title: "Garbage dump",
+      region: "Chennai",
+      upvotes: 10,
+      days: 2,
+      status: "Pending",
+      employee: null,
+    },
+  ]);
+
+  const [employeeForm, setEmployeeForm] = useState({ name: "", contact: "" });
+  const [assigningIssue, setAssigningIssue] = useState(null);
+
+  // Update status
+  function updateStatus(id, newStatus) {
+    setIssues(issues.map((i) => (i.id === id ? { ...i, status: newStatus } : i)));
+  }
+
+  // Assign employee
+  function saveEmployee(e) {
+    e.preventDefault();
+    setIssues(
+      issues.map((i) =>
+        i.id === assigningIssue ? { ...i, employee: { ...employeeForm } } : i
+      )
+    );
+    setEmployeeForm({ name: "", contact: "" });
+    setAssigningIssue(null);
+    setActivePage("issues"); // go back to issues page
+  }
+
+  // Progress
+  const resolved = issues.filter((i) => i.status === "Resolved").length;
+  const progress = Math.round((resolved / issues.length) * 100);
+
+  // Leaderboard
+  const leaderboard = Object.values(
+    issues.reduce((acc, issue) => {
+      const score = issue.upvotes * 2 + issue.days * 1.5;
+      if (!acc[issue.region])
+        acc[issue.region] = { region: issue.region, score: 0 };
+      acc[issue.region].score += score;
+      return acc;
+    }, {})
+  ).sort((a, b) => b.score - a.score);
+
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-indigo-700 text-white p-6 space-y-4">
+        <h2 className="text-2xl font-bold">Admin Panel</h2>
+        <nav className="space-y-2">
+          {["dashboard", "issues", "leaderboard", "resolved", "settings"].map(
+            (page) => (
+              <button
+                key={page}
+                className={`block w-full text-left px-3 py-2 rounded ${
+                  activePage === page ? "bg-indigo-500" : "hover:bg-indigo-600"
+                }`}
+                onClick={() => setActivePage(page)}
+              >
+                {page.charAt(0).toUpperCase() + page.slice(1)}
+              </button>
+            )
+          )}
+        </nav>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 p-6 space-y-6">
+        {/* Dashboard */}
+        {activePage === "dashboard" && (
+          <>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-lg shadow text-center">
+                <h3 className="text-gray-500">Total Issues</h3>
+                <p className="text-2xl font-bold">{issues.length}</p>
+              </div>
+              <div className="bg-yellow-100 p-4 rounded-lg shadow text-center">
+                <h3 className="text-gray-600">Pending</h3>
+                <p className="text-2xl font-bold">
+                  {issues.filter((i) => i.status === "Pending").length}
+                </p>
+              </div>
+              <div className="bg-blue-100 p-4 rounded-lg shadow text-center">
+                <h3 className="text-gray-600">In Progress</h3>
+                <p className="text-2xl font-bold">
+                  {issues.filter((i) => i.status === "In Progress").length}
+                </p>
+              </div>
+              <div className="bg-green-100 p-4 rounded-lg shadow text-center">
+                <h3 className="text-gray-600">Resolved</h3>
+                <p className="text-2xl font-bold">{resolved}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h3 className="font-semibold mb-2">Resolution Progress</h3>
+              <div className="w-full bg-gray-200 rounded-full h-4">
+                <div
+                  className="bg-green-500 h-4 rounded-full"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm mt-1">{progress}% Resolved</p>
+            </div>
+          </>
+        )}
+
+        {/* Issues */}
+        {activePage === "issues" && (
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Reported Issues</h3>
+            <table className="w-full border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">ID</th>
+                  <th className="p-2 border">Title</th>
+                  <th className="p-2 border">Region</th>
+                  <th className="p-2 border">Upvotes</th>
+                  <th className="p-2 border">Status</th>
+                  <th className="p-2 border">Employee</th>
+                  <th className="p-2 border">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {issues.map((issue) => (
+                  <tr key={issue.id}>
+                    <td className="p-2 border">{issue.id}</td>
+                    <td className="p-2 border">{issue.title}</td>
+                    <td className="p-2 border">{issue.region}</td>
+                    <td className="p-2 border">{issue.upvotes}</td>
+                    <td className="p-2 border">{issue.status}</td>
+                    <td className="p-2 border">
+                      {issue.employee
+                        ? `${issue.employee.name} (${issue.employee.contact})`
+                        : "Not Assigned"}
+                    </td>
+                    <td className="p-2 border">
+                      <div className="flex flex-col gap-2">
+                        <button
+                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                          onClick={() => updateStatus(issue.id, "In Progress")}
+                        >
+                          In Progress
+                        </button>
+                        <button
+                          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                          onClick={() => updateStatus(issue.id, "Resolved")}
+                        >
+                          Resolve
+                        </button>
+                        <button
+                          className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                          onClick={() => {
+                            setAssigningIssue(issue.id);
+                            setActivePage("assign");
+                          }}
+                        >
+                          Assign Employee
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Leaderboard */}
+        {activePage === "leaderboard" && (
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Leaderboard (Regions)</h3>
+            <table className="w-full border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">Region</th>
+                  <th className="p-2 border">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((l, idx) => (
+                  <tr key={idx}>
+                    <td className="p-2 border">{l.region}</td>
+                    <td className="p-2 border">{l.score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Resolved */}
+        {activePage === "resolved" && (
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Resolved Issues</h3>
+            <ul className="list-disc ml-6">
+              {issues
+                .filter((i) => i.status === "Resolved")
+                .map((i) => (
+                  <li key={i.id}>
+                    {i.title} ({i.region}) – Assigned to{" "}
+                    {i.employee ? i.employee.name : "No employee"}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Assign Employee Page */}
+        {activePage === "assign" && assigningIssue && (
+          <div className="bg-white p-6 rounded-lg shadow max-w-md">
+            <h3 className="font-semibold mb-4">Assign Employee</h3>
+            <form onSubmit={saveEmployee} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Employee Name"
+                value={employeeForm.name}
+                onChange={(e) =>
+                  setEmployeeForm({ ...employeeForm, name: e.target.value })
+                }
+                className="border rounded px-3 py-2 w-full"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Contact Info"
+                value={employeeForm.contact}
+                onChange={(e) =>
+                  setEmployeeForm({ ...employeeForm, contact: e.target.value })
+                }
+                className="border rounded px-3 py-2 w-full"
+                required
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                Save Assignment
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Settings */}
+        {activePage === "settings" && (
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Settings</h3>
+            <p>Settings content goes here...</p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
